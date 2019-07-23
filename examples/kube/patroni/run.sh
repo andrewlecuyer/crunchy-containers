@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Copyright 2016 - 2019 Crunchy Data Solutions, Inc.
+# Copyright 2017 - 2019 Crunchy Data Solutions, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,9 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ ${PATRONI} == "true" ]]
+source ${CCPROOT}/examples/common.sh
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+${DIR}/cleanup.sh
+
+create_storage "patroni" "${CCP_NAMESPACE?}"
+if [[ $? -ne 0 ]]
 then
-    source /opt/cpm/bin/start-patroni.sh
-else
-    source /opt/cpm/bin/start-standard.sh
+    echo_err "Failed to create storage, exiting.."
+    exit 1
 fi
+
+expenv -f $DIR/patroni.json | ${CCP_CLI?} create --namespace=${CCP_NAMESPACE?} -f -

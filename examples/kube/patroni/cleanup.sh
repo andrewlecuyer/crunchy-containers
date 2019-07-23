@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Copyright 2016 - 2019 Crunchy Data Solutions, Inc.
+# Copyright 2017 - 2019 Crunchy Data Solutions, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ ${PATRONI} == "true" ]]
-then
-    source /opt/cpm/bin/start-patroni.sh
-else
-    source /opt/cpm/bin/start-standard.sh
-fi
+source ${CCPROOT}/examples/common.sh
+echo_info "Cleaning up.."
+
+cleanup "${CCP_NAMESPACE?}-patroni"
+
+$CCPROOT/examples/waitforterm.sh patroni ${CCP_CLI?}
+
+dir_check_rm "patroni"

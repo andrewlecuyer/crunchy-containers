@@ -34,7 +34,27 @@ RUN yum -y update \
     pgbackrest-"${BACKREST_VERSION}" \
  && yum -y clean all
 
+# install patroni
+
+RUN yum -y install \
+    gcc \
+    postgresql11-server \
+    etcd \
+    python \
+    python-devel \
+    python-pip \
+    postgresql-devel \
+    libyaml-devel \
+    haproxy
+
+RUN pip uninstall -y ipaddress \
+ && pip install --upgrade pip \
+ && pip install --upgrade setuptools \
+ && pip install psycopg2-binary \
+ && pip install patroni[kubernetes]
+
 ENV PGROOT="/usr/pgsql-${PGVERSION}"
+ENV PATH="${PGROOT}/bin:${PATH}"
 
 # add path settings for postgres user
 # bash_profile is loaded in login, but not with exec

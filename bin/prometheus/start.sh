@@ -28,6 +28,23 @@ function trap_sigterm() {
     kill -SIGINT $(head -1 $PROMETHEUS_PIDFILE)
 }
 
+echo_info "######################################"
+echo_info "########## ANDY'S SECTION ############"
+echo_info "######################################"
+echo ""
+echo_info "ID:"
+id
+printf "\n"
+echo_info "root:"
+ls -la /
+printf "\n"
+echo_info "/data:"
+ls -la /data
+
+echo_info "######################################"
+echo_info "######################################"
+echo ""
+
 trap 'trap_sigterm' SIGINT SIGTERM
 
 if [[ -f /conf/prometheus.yml ]]

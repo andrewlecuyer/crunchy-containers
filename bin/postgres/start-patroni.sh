@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ ${PATRONI} == "true" ]]
-then
-    source /opt/cpm/bin/start-patroni.sh
-else
-    source /opt/cpm/bin/start-standard.sh
-fi
+[ -d "${PATRONI_POSTGRESQL_DATA_DIR}" ] || mkdir "${PATRONI_POSTGRESQL_DATA_DIR}"
+
+chmod 0700 "${PATRONI_POSTGRESQL_DATA_DIR}"
+
+patroni /opt/cpm/conf/patroni-bootstrap.yaml
