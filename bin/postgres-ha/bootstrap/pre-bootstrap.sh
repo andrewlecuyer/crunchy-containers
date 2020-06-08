@@ -406,3 +406,15 @@ echo "******************************"
 echo "Patroni configuration file:"
 echo "******************************"
 cat ${bootstrap_file}
+
+# Save the Patroni env vars for use by 'patronictl' in callback scripts
+while IFS= read -r line; do
+    # Some extra formatting is needed for PATRONI_KUBERNETES_LABELS to ensure it can be properly
+    # exported (e.g. when needed by 'patronictl' when executing a callback script).
+    if [[ "${line}" == *"PATRONI_KUBERNETES_LABELS"* ]]
+    then
+        IFS='=' read -r var1 var2 <<< "${line}"; echo "export ${var1}='${var2}'" >> "/tmp/patroni_env.sh"
+    else
+        echo "export ${line}" >> "/tmp/patroni_env.sh"
+    fi
+done <<< "${patroni_print_env}"

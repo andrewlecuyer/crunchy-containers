@@ -18,36 +18,32 @@ enable_debugging
 
 source /opt/cpm/bin/common/pgha-common.sh
 
-# set the Patroni port
-export $(get_patroni_port)
-
 # set PGHA_REPLICA_REINIT_ON_START_FAIL, which determines if replica should be reinitialized
 # if a start failure is detected
 export $(get_replica_reinit_start_fail)
 
-# set the name of this Patroni node, i.e. env var PATRONI_NAME
+# Set the PATRONI_NAME environment variable
 export $(get_patroni_name)
 
-# get the role and state of the local Patroni node by calling the "patroni" endpoint
-local_node_json=$(curl --silent "127.0.0.1:${PGHA_PATRONI_PORT}/patroni" --stderr - )
-role=$(echo "${local_node_json}" | /opt/cpm/bin/yq r - role)
-state=$(echo "${local_node_json}" | /opt/cpm/bin/yq r - state)
+# Exit right away if support for "start failed" reinit is not enabled
+if [[ "${PGHA_REPLICA_REINIT_ON_START_FAIL}" != "true" ]]
+then
+    exit 0
+fi
 
 # determine if a backup is in progress following a failover (i.e. the promotion of a replica)
-# by looking for the "failover_backup_status" tag in the DCS
-primary_on_role_change=$(curl --silent "127.0.0.1:${PGHA_PATRONI_PORT}/config" \
-    | /opt/cpm/bin/yq r - tags.primary_on_role_change)
+# by looking for the "primary_on_role_change" tag in the DCS
+primary_on_role_change=$(patronictl show-config | /opt/cpm/bin/yq r - tags.primary_on_role_change)
             
 # if configured to reinit a replica when a "start failed" state is detected, and if a backup
 # is not current in progress following a failover, then reinitialize the replica by calling
 # the "reinitialize" endpoint on the local Patroni node
-if [[ "${PGHA_REPLICA_REINIT_ON_START_FAIL}" == "true" && "${role}" == "replica" \
-    && "${state}" == "start failed" && "${primary_on_role_change}" != "true" ]]
+if [[ "${primary_on_role_change}" != "true" ]] && 
+    check_node_status_and_role "${PATRONI_NAME}" "start failed" "replica"
 then
     # reinitialize the local Patroni node
-    curl --silent -XPOST -d '{"force":true}' "127.0.0.1:${PGHA_PATRONI_PORT}/reinitialize"
+    patronictl reinit "${PATRONI_SCOPE}" "${HOSTNAME}" --force
 fi
-
 
 # always exit with exit code 0 to prevent restarts
 exit 0

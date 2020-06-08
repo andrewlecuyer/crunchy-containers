@@ -18,27 +18,17 @@ enable_debugging
 
 source /opt/cpm/bin/common/pgha-common.sh
 
-# while the cluster is initializing, readiness is determined based on whether or not the
-# 'pgha_initialized' file exists.  Once the cluster has been initialized and this file has been
-# created, the Patroni "health" endpoint will then be utilized for any future readiness checks.
-if [[ -f "/crunchyadm/pgha_initialized" ]]
+# Set the PATRONI_NAME environment variable
+export $(get_patroni_name)
+
+# While the local instance is initializing, readiness is determined based on whether or not the
+# 'pgha_initialized' file exists.  Therefore, if this file does not yet exist, then the instance
+# has not yet been initialized (i.e. it is not yet ready), and we can simply exit.
+if [[ ! -f "/crunchyadm/pgha_initialized" ]]
 then
-
-    # set the Patroni port
-    export $(get_patroni_port)
-
-    # obtain HTTP status code returned from the "health" endpoint
-    status_code=$(curl -o /dev/stderr -w "%{http_code}" "127.0.0.1:${PGHA_PATRONI_PORT}/health" 2> /dev/null)
-
-    # the local node is considered heathly if the HTTP status code returned from the local "health"
-    # endpoint is greated than 200 or less than 400, in accordance with the Kubernetes documenation
-    # for HTTP readiness checks, i.e. per the docs "any code greater than or equal to 200 and less 
-    # than 400 indicates success. Any other code indicates failure."
-    if [[ $status_code -ge 200 && $status_code -lt 400 ]]
-    then
-        exit 0
-    fi
+    # return exit code 1 if not initialized
+    exit 1
 fi
-
-# return exit code 1 if not initialized or health endpoint check fails
-exit 1
+    
+# Determine readiness by checking whether or not the local instance has a "running" status
+check_node_status_and_role "${PATRONI_NAME}" "running"

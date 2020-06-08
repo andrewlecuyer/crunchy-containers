@@ -19,6 +19,8 @@ export PGPORT="$PGHA_PG_PORT"
 source /opt/cpm/bin/common/common_lib.sh
 enable_debugging
 
+source /opt/cpm/bin/common/pgha-common.sh
+
 trap_sigterm() {
 
     echo_warn "Signal trap triggered, beginning shutdown.." | tee -a "${PATRONI_POSTGRESQL_DATA_DIR}"/trap.output
@@ -44,13 +46,16 @@ trap_sigterm() {
 initialization_monitor() {
     echo_info "Starting background process to monitor Patroni initization and restart the database if needed"
     {
-        # Wait until the health endpoint for the local primary or replica to return 200 indicating it is running
-        status_code=$(curl -o /dev/stderr -w "%{http_code}" "127.0.0.1:${PGHA_PATRONI_PORT}/health" 2> /dev/null)
-        until [[ "${status_code}" == "200" ]]
+        # Just wait a few seconds to give Patroni a chance to start.  Otherwise some errors and stack
+        # traces might be displayed if the following 'patronictl' command is run but Patroni has not yet
+        # initialized.
+        sleep 3
+
+        # Wait until the Patroni CLI reports a "running" state indicating it is running
+        until check_node_status_and_role "${PATRONI_NAME}" "running"
         do
             sleep 1
             echo "Cluster not yet inititialized, retrying" >> "/tmp/patroni_initialize_check.log"
-            status_code=$(curl -o /dev/stderr -w "%{http_code}" "127.0.0.1:${PGHA_PATRONI_PORT}/health" 2> /dev/null)
         done
 
         # Enable pgbackrest
@@ -63,19 +68,17 @@ initialization_monitor() {
         then
             echo_info "PGHA_INIT is '${PGHA_INIT}', waiting to initialize as primary"
             # Wait until the master endpoint returns 200 indicating the local node is running as the current primary
-            status_code=$(curl -o /dev/stderr -w "%{http_code}" "127.0.0.1:${PGHA_PATRONI_PORT}/master" 2> /dev/null)
-            until [[ "${status_code}" == "200" ]]
+            until check_node_status_and_role "${PATRONI_NAME}" "running" "Leader"
             do
                 sleep 1
                 echo "Not yet running as primary, retrying" >> "/tmp/patroni_initialize_check.log"
-                status_code=$(curl -o /dev/stderr -w "%{http_code}" "127.0.0.1:${PGHA_PATRONI_PORT}/master" 2> /dev/null)
             done
 
             echo_info "PGHA_INIT is '${PGHA_INIT}', executing post-init process to fully initialize the cluster"
             if [[ -f "/crunchyadm/pgha_manual_init" ]]
             then
                 echo_info "Executing Patroni restart to restart database and update configuration"
-                curl -X POST --silent "127.0.0.1:${PGHA_PATRONI_PORT}/restart"
+                patronictl restart "${PATRONI_SCOPE}" --force
                 test_server "postgres" "${PGHOST}" "${PGPORT}" "postgres"
                 echo_info "The database has been restarted"
             else
@@ -102,8 +105,7 @@ initialization_monitor() {
 primary_initialization_monitor() {
     echo_info "Primary host specified, checking if Primary is ready before initializing replica"
     env_check_err "PGHA_PRIMARY_HOST"
-    while [[ $(curl --silent "${PGHA_PRIMARY_HOST}:${PGHA_PATRONI_PORT}/master" --stderr - \
-        | /opt/cpm/bin/yq r - state 2> /dev/null) != "running" ]]
+    until check_node_status_and_role "${PGHA_PRIMARY_HOST}" "running" "Leader"
     do
         echo_info "Primary is not ready, retrying"
         sleep 1

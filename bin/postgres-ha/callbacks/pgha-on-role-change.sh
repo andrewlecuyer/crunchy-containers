@@ -19,9 +19,6 @@ enable_debugging
 source /opt/cpm/bin/common/pgha-common.sh
 source /opt/cpm/bin/common/pgha-tablespaces.sh
 
-# set the Patroni port
-export $(get_patroni_port)
-
 # set PGHA_PGBACKREST to determine if backrest is enabled
 export $(get_pgbackrest_enabled)
 
@@ -35,6 +32,9 @@ echo_info "${action} callback called (action=${action} role=${role} cluster=${cl
 # get pgbackrest env vars
 source /opt/cpm/bin/pgbackrest/pgbackrest-set-env.sh
 
+# get Patroni env vars for 'patronictl'
+source /tmp/patroni_env.sh
+
 # if pgBackRest is enabled and the node has been promoted to "primary" (i.e. "master"), and if
 # pgBackRest is enabled and is not utilizing a dedicated repository host, then take a new backup
 # to ensure the proper creation of replicas.  Also, write a tag to the DCS while the backup is in
@@ -44,11 +44,11 @@ source /opt/cpm/bin/pgbackrest/pgbackrest-set-env.sh
 # promotion of a replica to primary)
 if [[ "${role}" ==  "master" && "${PGHA_PGBACKREST}" == "true" ]]
 then
-    curl -s -XPATCH -d '{"tags":{"primary_on_role_change":"true"}}' "localhost:${PGHA_PATRONI_PORT}/config"
+    patronictl edit-config --set tags.primary_on_role_change=true --force
     if [[ ! -v PGBACKREST_REPO1_HOST && ! -v PGBACKREST_REPO_HOST ]]
     then
         pgbackrest backup
-        curl -s -XPATCH -d '{"tags":{"primary_on_role_change":null}}' "localhost:${PGHA_PATRONI_PORT}/config"
+        patronictl edit-config --set tags.primary_on_role_change=null --force
     fi
 fi
 

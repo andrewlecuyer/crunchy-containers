@@ -28,8 +28,6 @@ conf_content="${1?}"
 # configuration
 merge_file="${bootstrap_file}.merge"
 
-patroni_port="${2?}"
-
 # cleans up any resources and releases the file lock
 cleanup() {
     rm -f "${lock_file}" 
@@ -78,7 +76,7 @@ echo "${conf_content}" > "${merge_file}"
 handle_error_and_revert "$?" "Unable to merge files"
 
 # Now issue a patroni reload
-curl -s -XPOST "http://localhost:${patroni_port}/reload"
+patronictl reload "${PATRONI_SCOPE}" --force
 handle_error_and_revert "$?" "Unable to reload local configuration"
 
 echo_info "Reload Config: Successfully scheduled config reload"
