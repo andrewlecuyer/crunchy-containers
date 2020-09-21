@@ -23,11 +23,8 @@
 # This accepts one argument, the value of "%p" that is used as part of the
 # PostgreSQL archiving process. This is referenced as $1
 
-# Load the pgBackRest environmental variables
-source /opt/cpm/bin/pgbackrest/pgbackrest-set-env.sh
-
 # first try local
-pgbackrest archive-push $1
+/opt/cpm/bin/wrapper/pgbackrest archive-push $1
 local_exit=$?
 
 # set the repo type flag
@@ -41,7 +38,7 @@ then
 fi
 
 # then try S3
-pgbackrest archive-push ${archive_push_cmd_args[*]} $1
+/opt/cpm/bin/wrapper/pgbackrest archive-push ${archive_push_cmd_args[*]} $1
 s3_exit=$?
 
 # check each exit code. If one of them fail, exit with their nonzero exit code

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# source /opt/cpm/bin/common/run_cmd.sh
+# run_cmd_synchronus "pgbackrest" "$@"
+
+SOCKET=pgbackrest ASYNC=false /opt/cpm/bin/run_cmd.sh "pgbackrest" "$@"

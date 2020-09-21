@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# source /opt/cpm/bin/common/run_cmd.sh
+# run_cmd_synchronus "pg_ctl" "$@"
+
+SOCKET=crunchy-pg ASYNC=false /opt/cpm/bin/common/run_cmd.sh "pg_ctl" "$@"
+
+# printf "executing pg_ctl in sidecar\n"
+
+# while read -r line
+# do
+#     if [[ "${line:0:9}" == "EXIT_CODE" ]]
+#     then
+#         line_arr=(${line})
+#         exit_code=${line_arr[1]}
+#         printf "EXIT_CODE found, exiting with code %s\n" "${exit_code}"
+#         exit "${exit_code}"
+#     fi
+#     printf "%s\n" "${line}"
+# done < <(echo "pg_ctl$(printf ' %q' "$@")" | socat -t 1 /crunchyadm/pgo.sock -,ignoreeof)
+
+# printf "finished executing pg_ctl in sidecar\n"
+
+# declare pid
+# run_pg_ctl() {
+#     while read -r line
+#     do
+#         if [[ "${pid}" == "" ]]
+#         then
+#             pid="${line}"
+#         fi
+#         printf "%s\n" "${line}"
+#     done < <(echo "pg_ctl $(printf ' %q' "$@")" | socat -t 1 /crunchyadm/pgo.sock -)
+# }
+
+# run_pg_ctl "$@" &
+
+# while [[ "${pid}" == "" ]]
+# do
+#     sleep 0.5
+# done
+
+# while [[ -e /proc/"${pid}"  ]]

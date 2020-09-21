@@ -2,7 +2,7 @@ ARG BASEOS
 ARG BASEVER
 ARG PG_FULL
 ARG PREFIX
-FROM ${PREFIX}/crunchy-pg-base:${BASEOS}-${PG_FULL}-${BASEVER}
+FROM ${PREFIX}/crunchy-base:${BASEOS}-${PG_FULL}-${BASEVER}
 
 # ===== Early lines ordered for leveraging cache, reorder carefully =====
 # For RHEL8 all arguments used in main code has to be specified after FROM
@@ -76,6 +76,7 @@ RUN if [ "$DFSET" = "centos" ] ; then \
 		python3-pip \
 		python3-psutil \
 		python3-psycopg2 \
+		socat \
 	&& ${PACKAGER} -y clean all ; \
 fi
 
@@ -113,7 +114,8 @@ fi
 RUN pip3 install --upgrade python-dateutil \
 	&& pip3 install patroni[kubernetes]=="${PATRONI_VER}"
 
-RUN useradd crunchyadm -g 0 -u 17
+RUN groupadd postgres -g 26
+RUN useradd postgres -g 26 -u 26
 
 ENV PATH="${PGROOT}/bin:${PATH}"
 
@@ -123,9 +125,9 @@ RUN mkdir -p /opt/cpm/bin /opt/cpm/conf /pgdata /pgwal /pgconf /backrestrepo \
 # Adjust ownership for the folders to be the "postgres" user and allow the group
 # permissions to match the user ones EXCEPT for the /tablespaces folder, which
 # will only have permissions on the user
-RUN chown -R postgres:postgres /opt/cpm /var/lib/pgsql \
+RUN chown -R postgres:postgres /opt/cpm \
 	/pgdata /pgwal /pgconf /backrestrepo /crunchyadm /tablespaces &&  \
-	chmod -R g=u /opt/cpm /var/lib/pgsql \
+	chmod -R g=u /opt/cpm \
 	/pgdata /pgwal /pgconf /backrestrepo /crunchyadm /tablespaces
 
 # open up the postgres port

@@ -33,7 +33,8 @@ RUN if [ "$DFSET" = "centos" ] ; then \
         	psmisc \
         	rsync \
         	wal2json${PG_MAJOR//.} \
-        && ${PACKAGER} -y clean all ; \
+			socat \
+	&& ${PACKAGER} -y clean all ; \
 else \
         ${PACKAGER} -y install \
 		--enablerepo="epel" \

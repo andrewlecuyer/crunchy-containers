@@ -13,6 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source /tmp/pgbackrest_env.sh > /tmp/pgbackrest_env.stdout 2> /tmp/pgbackrest_env.stderr
-
 echo $(echo -n "$conf|" | tr '/' '_'; pgbackrest --output=json info | tr -d '\n')

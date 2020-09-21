@@ -10,6 +10,6 @@ bootstrap:
   dcs:
     postgresql:
       parameters:
-        unix_socket_directories: /tmp,/crunchyadm
+        unix_socket_directories: /crunchyadm
         wal_level: logical
-  post_bootstrap: /opt/cpm/bin/bootstrap/post-bootstrap.sh
+  post_bootstrap: /opt/cpm/bin/bootstrap/post-bootstrap-sidecar.sh

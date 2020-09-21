@@ -1,0 +1,25 @@
+[crunchypg96]
+#Config Version 1.5
+name=Crunchy Data PostgreSQL 9.6 $releasever - $basearch
+baseurl=https://121:3fef72681b8a4e03652290e38abf5ed5105d7314f29385b2bbcc8fd67decdaf65ed6aafc56b583250b49837f568bd5b7aa835519b86daba0674d781b839d396c@yum.crunchydata.com/postgresql96/redhat/EL$releasever/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///opt/crunchy/CRUNCHY-GPG-KEY.public
+
+
+[crunchypg96-source]
+#Config Version 1.5
+name=Crunchy Data PostgreSQL 9.6 $releasever - Source
+baseurl=https://121:3fef72681b8a4e03652290e38abf5ed5105d7314f29385b2bbcc8fd67decdaf65ed6aafc56b583250b49837f568bd5b7aa835519b86daba0674d781b839d396c@yum.crunchydata.com/postgresql96/redhat/EL$releasever/SRPMS/
+enabled=0
+gpgcheck=1
+gpgkey=file:///opt/crunchy/CRUNCHY-GPG-KEY.public
+
+
+[crunchypg96-debuginfo]
+#Config Version 1.5
+name=Crunchy Data PostgreSQL 9.6 $releasever - Debug
+baseurl=https://121:3fef72681b8a4e03652290e38abf5ed5105d7314f29385b2bbcc8fd67decdaf65ed6aafc56b583250b49837f568bd5b7aa835519b86daba0674d781b839d396c@yum.crunchydata.com/postgresql96/redhat/EL$releasever/debug/
+enabled=0
+gpgcheck=1
+gpgkey=file:///opt/crunchy/CRUNCHY-GPG-KEY.public

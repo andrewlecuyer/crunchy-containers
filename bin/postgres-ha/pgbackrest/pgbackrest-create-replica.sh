@@ -19,8 +19,6 @@ enable_debugging
 source /opt/cpm/bin/common/pgha-common.sh
 export $(get_patroni_pgdata_dir)
 
-source /opt/cpm/bin/pgbackrest/pgbackrest-set-env.sh
-
 bootstrap_role=$1
 restore_cmd_args=()
 
@@ -91,7 +89,7 @@ then
 fi
 
 # perform the restore
-eval "pgbackrest restore ${restore_cmd_args[*]} ${RESTORE_OPTS}"
+eval "/opt/cpm/bin/wrapper/pgbackrest restore ${restore_cmd_args[*]} ${RESTORE_OPTS}"
 err_check "$?" "pgBackRest ${bootstrap_role} Creation" "pgBackRest restore failed when creating ${bootstrap_role}"
 
 echo_info "${bootstrap_role} pgBackRest restore complete"

@@ -22,9 +22,13 @@ RUN ${PACKAGER} -y install  \
 		--setopt=skip_missing_names_on_install=False \
 		--enablerepo="epel" \
 		nss_wrapper \
-		postgresql${PG_MAJOR//.}-server \
+		socat \
+	# postgresql${PG_MAJOR//.}-server \
 	&& ${PACKAGER} -y install crunchy-backrest-${BACKREST_VER} \
 	&& ${PACKAGER} -y clean all --enablerepo="epel"
+
+RUN groupadd postgres -g 26
+RUN useradd postgres -g 26 -u 26
 
 # Preserving PGVERSION out of paranoia
 ENV	PGROOT="/usr/pgsql-${PG_MAJOR}" PGVERSION="${PG_MAJOR}"
@@ -41,6 +45,7 @@ RUN chown -R postgres:postgres /opt/cpm  \
 	/var/lib/pgsql /var/log/pgbackrest
 
 ADD bin/backrest_restore /opt/cpm/bin
+ADD bin/common /opt/cpm/bin/common
 
 ADD conf/backrest_restore /opt/cpm/conf
 

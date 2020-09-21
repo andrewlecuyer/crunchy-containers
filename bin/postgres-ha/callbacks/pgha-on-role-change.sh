@@ -32,9 +32,6 @@ role="${2}"
 cluster="${3}"
 echo_info "${action} callback called (action=${action} role=${role} cluster=${cluster})"
 
-# get pgbackrest env vars
-source /opt/cpm/bin/pgbackrest/pgbackrest-set-env.sh
-
 # if pgBackRest is enabled and the node has been promoted to "primary" (i.e. "master"), and if
 # pgBackRest is enabled and is not utilizing a dedicated repository host, then take a new backup
 # to ensure the proper creation of replicas.  Also, write a tag to the DCS while the backup is in
@@ -47,7 +44,7 @@ then
     curl -s -XPATCH -d '{"tags":{"primary_on_role_change":"true"}}' "localhost:${PGHA_PATRONI_PORT}/config"
     if [[ ! -v PGBACKREST_REPO1_HOST && ! -v PGBACKREST_REPO_HOST ]]
     then
-        pgbackrest backup
+        /opt/cpm/bin/wrapper/pgbackrest backup
         curl -s -XPATCH -d '{"tags":{"primary_on_role_change":null}}' "localhost:${PGHA_PATRONI_PORT}/config"
     fi
 fi

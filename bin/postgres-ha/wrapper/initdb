@@ -1,0 +1,22 @@
+#!/bin/bash
+
+SOCKET=crunchy-pg ASYNC=false /opt/cpm/bin/common/run_cmd.sh "initdb" "$@"
+
+# printf "executing initdb in sidecar\n"
+
+# while read -r line
+# do
+#     if [[ "${line:0:9}" == "EXIT_CODE" ]]
+#     then
+#         line_arr=(${line})
+#         exit_code=${line_arr[1]}
+#         printf "EXIT_CODE found, exiting with code %s\n" "${exit_code}"
+#         exit "${exit_code}"
+#         continue
+#     fi
+#     printf "%s\n" "${line}"
+# done < <(echo "initdb$(printf ' %q' "$@")" | socat -t 1 /crunchyadm/pgo.sock -,ignoreeof)
+
+# printf "finished executing initdb in sidecar\n"
+
+# echo "initdb $(printf ' %q' "$@")" | socat -t 1 /crunchyadm/pgo.sock -

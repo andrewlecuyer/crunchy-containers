@@ -66,7 +66,7 @@
 
 {
     "kind": "Deployment",
-    "apiVersion": "extensions/v1beta1",
+    "apiVersion": "apps/v1",
     "metadata": {
         "name": "postgres-ha-01",
         "labels": {
@@ -77,6 +77,14 @@
     },
     "spec": {
         "replicas": 1,
+        "selector": {
+            "matchLabels": {
+                "application": "postgres-ha",
+                "name": "postgres-ha-01",
+                "cleanup": "$CCP_NAMESPACE-postgres-ha",
+                "cluster-name": "example-cluster"
+            }
+        },
         "template": {
             "metadata": {
                 "labels": {
@@ -87,14 +95,12 @@
                 }
             },
             "spec": {
+                "shareProcessNamespace": true,
                 "serviceAccountName": "postgres-ha-sa",
                 "containers": [
                     {
                         "name": "postgres",
                         "image": "$CCP_IMAGE_PREFIX/crunchy-postgres-ha:$CCP_IMAGE_TAG",
-                        "securityContext": {
-                            "runAsUser": 26
-                        },
                         "readinessProbe": {
                             "exec": {
                                 "command": [
@@ -257,166 +263,26 @@
                         "imagePullPolicy": "IfNotPresent"
                     },
                     {
-                        "name": "crunchyadm",
-                        "image": "$CCP_IMAGE_PREFIX/crunchy-admin:$CCP_IMAGE_TAG",
-                        "securityContext": {
-                            "runAsUser": 17
-                        },
-                        "readinessProbe": {
-                            "exec": {
-                                "command": [
-                                    "/opt/cpm/bin/crunchyadm-readiness.sh"
-                                ]
-                            },
-                            "initialDelaySeconds": 30,
-                            "timeoutSeconds": 10
-                        },
-                        "env": [
-                            {
-                                "name": "PGHOST",
-                                "value": "/crunchyadm"
-                            }
-                        ],
-                        "volumeMounts": [
-                            {
-                                "mountPath": "/crunchyadm",
-                                "name": "crunchyadm"
-                            }
-                        ],
-                        "imagePullPolicy": "IfNotPresent"
-                    }
-                ],
-                "volumes": [
-                    {
-                        "name": "pgdata",
-                        "persistentVolumeClaim": {
-                            "claimName": "postgres-ha-01-pgdata"
-                        }
-                    },
-                    {
-                        "name": "backrestrepo",
-                        "persistentVolumeClaim": {
-                            "claimName": "postgres-ha-backrestrepo"
-                        }
-                    },
-                    {
-                        "name": "pguser",
-                        "secret": {
-                            "secretName": "postgres-ha-pguser"
-                        }
-                    },
-                    {
-                        "name": "pgsuper",
-                        "secret": {
-                            "secretName": "postgres-ha-pgsuper"
-                        }
-                    },
-                    {
-                        "name": "pgreplicator",
-                        "secret": {
-                            "secretName": "postgres-ha-pgreplicator"
-                        }
-                    },
-                    {
-                        "name": "crunchyadm",
-                        "emptyDir": {}
-                    }
-                ],
-                "restartPolicy": "Always",
-                "terminationGracePeriodSeconds": 30,
-                "dnsPolicy": "ClusterFirst",
-                "securityContext": {
-                    $CCP_SECURITY_CONTEXT
-                }
-            }
-        },
-        "strategy": {
-            "type": "RollingUpdate",
-            "rollingUpdate": {
-                "maxUnavailable": 1,
-                "maxSurge": 1
-            }
-        }
-    }
-}
-
-{
-    "kind": "Deployment",
-    "apiVersion": "extensions/v1beta1",
-    "metadata": {
-        "name": "postgres-ha-02",
-        "labels": {
-            "application": "postgres-ha",
-            "name": "postgres-ha-02",
-            "cleanup": "$CCP_NAMESPACE-postgres-ha"
-        }
-    },
-    "spec": {
-        "replicas": 1,
-        "template": {
-            "metadata": {
-                "labels": {
-                    "application": "postgres-ha",
-                    "name": "postgres-ha-02",
-                    "cleanup": "$CCP_NAMESPACE-postgres-ha",
-                    "cluster-name": "example-cluster"
-                }
-            },
-            "spec": {
-                "serviceAccountName": "postgres-ha-sa",
-                "containers": [
-                    {
-                        "name": "postgres",
-                        "image": "$CCP_IMAGE_PREFIX/crunchy-postgres-ha:$CCP_IMAGE_TAG",
+                        "name": "crunchy-postgres",
+                        "image": "$CCP_IMAGE_PREFIX/crunchy-postgres:$CCP_IMAGE_TAG",
                         "securityContext": {
                             "runAsUser": 26
                         },
-                        "readinessProbe": {
-                            "exec": {
-                                "command": [
-                                    "/opt/cpm/bin/health/pgha-readiness.sh"
-                                ]
-                            },
-                            "initialDelaySeconds": 30
-                        },
-                        "livenessProbe": {
-                            "exec": {
-                                "command": [
-                                    "/opt/cpm/bin/health/pgha-liveness.sh"
-                                ]
-                            },
-                            "initialDelaySeconds": 30,
-                            "periodSeconds": 15,
-                            "timeoutSeconds": 10
-                        },
+                        "command": [
+                            "bash"
+                        ],
+                        "args": [
+                            "-c",
+                            "socat UNIX-LISTEN://crunchyadm/crunchy-pg.sock,fork,reuseaddr EXEC:/opt/cpm/bin/exec-socket-cmd.sh,stderr"
+                        ],
                         "env": [
                             {
-                                "name": "PATRONI_KUBERNETES_NAMESPACE",
-                                "valueFrom": {
-                                    "fieldRef": {
-                                        "fieldPath": "metadata.namespace"
-                                    }
-                                }
+                                "name": "PATH",
+                                "value": "/bin:/usr/pgsql-12/bin"
                             },
                             {
-                                "name": "PATRONI_KUBERNETES_LABELS",
-                                "value": "{cleanup: \"$CCP_NAMESPACE-postgres-ha\"}"
-                            },
-                            {
-                                "name": "PGHA_PRIMARY_HOST",
-                                "value": "postgres-ha-master"
-                            },
-                            {
-                                "name": "PATRONI_POSTGRESQL_DATA_DIR",
-                                "value": "/pgdata/postgres-ha-02"
-                            },
-                            {
-                                "name": "PGHA_CRUNCHYADM",
-                                "value": "true"
-                            },
-                            {
-                                "name": "PGHA_REPLICA_REINIT_ON_START_FAIL",
-                                "value": "true"
+                                "name": "PGHOST",
+                                "value": "/crunchyadm"
                             }
                         ],
                         "volumeMounts": [
@@ -426,62 +292,32 @@
                                 "readOnly": false
                             },
                             {
-                                "mountPath": "/backrestrepo",
-                                "name": "backrestrepo",
-                                "readOnly": false
-                            },
-                            {
-                                "mountPath": "/pgconf/pguser",
-                                "name": "pguser"
-                            },
-                            {
-                                "mountPath": "/pgconf/pgsuper",
-                                "name": "pgsuper"
-                            },
-                            {
-                                "mountPath": "/pgconf/pgreplicator",
-                                "name": "pgreplicator"
-                            },
-                            {
                                 "mountPath": "/crunchyadm",
                                 "name": "crunchyadm"
                             }
                         ],
-                        "ports": [
-                            {
-                                "containerPort": 5432,
-                                "protocol": "TCP"
-                            },
-                            {
-                                "containerPort": 8009,
-                                "protocol": "TCP"
-                            }
-                        ],
-                        "resources": {},
                         "imagePullPolicy": "IfNotPresent"
                     },
                     {
-                        "name": "crunchyadm",
-                        "image": "$CCP_IMAGE_PREFIX/crunchy-admin:$CCP_IMAGE_TAG",
+                        "name": "pgbackrest",
+                        "image": "$CCP_IMAGE_PREFIX/crunchy-backrest-restore:$CCP_IMAGE_TAG",
                         "securityContext": {
-                            "runAsUser": 17
+                            "runAsUser": 26
                         },
-                        "readinessProbe": {
-                            "exec": {
-                                "command": [
-                                    "/opt/cpm/bin/crunchyadm-readiness.sh"
-                                ]
-                            },
-                            "initialDelaySeconds": 30,
-                            "timeoutSeconds": 10
-                        },
-                        "env": [
-                            {
-                                "name": "PGHOST",
-                                "value": "/crunchyadm"
-                            }
+                        "command": [
+                            "bash"
                         ],
+                        "args": [
+                            "-c",
+                            "socat UNIX-LISTEN://crunchyadm/pgbackrest.sock,fork,reuseaddr EXEC:/opt/cpm/bin/common/exec-socket-cmd.sh,stderr"
+                        ],
+                        "env": [],
                         "volumeMounts": [
+                            {
+                                "mountPath": "/pgdata",
+                                "name": "pgdata",
+                                "readOnly": false
+                            },
                             {
                                 "mountPath": "/crunchyadm",
                                 "name": "crunchyadm"

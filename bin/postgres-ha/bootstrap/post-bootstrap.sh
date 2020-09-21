@@ -13,9 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export PGHOST="/tmp"
+source_pid=$1
+root_dir="/proc/$1/root"
 
-source /opt/cpm/bin/common/common_lib.sh
+export PGHOST="/crunchyadm"
+
+pgha_env_vars=$( tr '\0' '\n' < "/proc/${source_pid}/environ"  | grep ^PGHA_ )
+readarray -t pgha_env_var_arr <<< "${pgha_env_vars}"
+for env_var in "${!pgha_env_var_arr[@]}"
+do
+    export "${pgha_env_var_arr[env_var]}"
+done
+
+source "${root_dir}/opt/cpm/bin/common/common_lib.sh"
 enable_debugging
 
 echo_info "postgres-ha post-bootstrap starting"
@@ -28,14 +38,14 @@ echo_info "postgres-ha post-bootstrap starting"
 # serves as an extra precaution.
 if [[ "${PGHA_BOOTSTRAP_METHOD}" == "pgbackrest_init" ]]
 then
-    pgbackrest stop
+    /opt/cpm/bin/wrapper/pgbackrest stop
     err_check "$?" "post bootstrap" "Could not stop pgBackRest, ${setup_file} will not be run"
 fi
 
 if [[ "${PGHA_BOOTSTRAP_METHOD}" == "initdb" ]]
 then
     # Run either a custom or the defaul setup.sql file
-    if [[ -f "/pgconf/setup.sql" ]]
+    if [[ -f "${root_dir}/pgconf/setup.sql" ]]
     then
         echo_info "Using custom setup.sql"
         setup_file="/pgconf/setup.sql"
@@ -44,7 +54,7 @@ then
         setup_file="/opt/cpm/bin/sql/setup.sql"
     fi
 else
-    if [[ -f "/pgconf/post-existing-init.sql" ]]
+    if [[ -f "${root_dir}/pgconf/post-existing-init.sql" ]]
     then
         echo_info "Using custom post-existing-init.sql"
         setup_file="/pgconf/post-existing-init.sql"
@@ -55,6 +65,6 @@ else
 fi
 
 echo_info "Running ${setup_file} file"
-envsubst < "${setup_file}" | psql -f -
+envsubst < "${root_dir}${setup_file}" | psql -f -
 
 echo_info "postgres-ha post-bootstrap complete"

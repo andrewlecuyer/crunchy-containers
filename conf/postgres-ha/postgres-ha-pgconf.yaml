@@ -1,7 +1,9 @@
 ---
 postgresql:
+  parameters:
+    unix_socket_directories: /crunchyadm
   use_unix_socket: true
-  pgpass: /tmp/.pgpass
+  pgpass: /crunchyadm/.pgpass
   create_replica_methods:
     - pgbackrest
     - basebackup
@@ -17,3 +19,4 @@ postgresql:
   remove_data_directory_on_rewind_failure: true
   callbacks:
     on_role_change: /opt/cpm/bin/callbacks/pgha-on-role-change.sh
+  bin_dir: /opt/cpm/bin/wrapper

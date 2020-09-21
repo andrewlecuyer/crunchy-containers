@@ -16,28 +16,30 @@
 export PGHOST="/tmp"
 export PGPORT="$PGHA_PG_PORT"
 
+export TMPDIR=/crunchyadm
+
 source /opt/cpm/bin/common/common_lib.sh
 enable_debugging
 
-trap_sigterm() {
+# trap_sigterm() {
 
-    echo_warn "Signal trap triggered, beginning shutdown.." | tee -a "${PATRONI_POSTGRESQL_DATA_DIR}"/trap.output
+#     echo_warn "Signal trap triggered, beginning shutdown.." | tee -a "${PATRONI_POSTGRESQL_DATA_DIR}"/trap.output
 
-    killall patroni
-    echo_warn "Killed Patroni to gracefully shutdown PG" | tee -a "${PATRONI_POSTGRESQL_DATA_DIR}"/trap.output
+#     killall patroni
+#     echo_warn "Killed Patroni to gracefully shutdown PG" | tee -a "${PATRONI_POSTGRESQL_DATA_DIR}"/trap.output
 
-    if [[ ${ENABLE_SSHD} == "true" ]]
-    then
-        echo_info "Killing SSHD.."
-        killall sshd
-    fi
+#     if [[ ${ENABLE_SSHD} == "true" ]]
+#     then
+#         echo_info "Killing SSHD.."
+#         killall sshd
+#     fi
 
-    while killall -0 patroni; do
-        echo_info "Waiting for Patroni to terminate.."
-        sleep 1
-    done
-    echo_info "Patroni shutdown complete"
-}
+#     while killall -0 patroni; do
+#         echo_info "Waiting for Patroni to terminate.."
+#         sleep 1
+#     done
+#     echo_info "Patroni shutdown complete"
+# }
 
 # Starts a background process to wait for cluster initialization, restart the database if configuration updates
 # are needed, and indicate cluster readiness
@@ -197,9 +199,13 @@ echo_info "Initializing cluster bootstrap with command: '${bootstrap_cmd}'"
 if [[ "$$" == 1 && "${PGHA_BOOTSTRAP_METHOD}" != "pgbackrest_init" ]]
 then
     echo_info "Running Patroni as PID 1"
-    exec ${bootstrap_cmd}
 else
-    echo_info "Patroni will not run as PID 1. Creating signal handler"
-    trap 'trap_sigterm' SIGINT SIGTERM
-    ${bootstrap_cmd}
+    echo_info "Patroni will not run as PID 1"
 fi
+
+if [[ ! -e /crunchyadm/pgo.sock ]]
+then
+    sleep 1
+fi
+
+exec ${bootstrap_cmd}

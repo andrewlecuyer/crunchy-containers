@@ -42,7 +42,7 @@ create_pgbackrest_dirs() {
 # Uses the pgBackRest "info" command to verify that the local pgBackRest configuration is valid
 verify_pgbackrest_config() {
     echo_info "pgBackRest: Checking if configuration is valid.."
-    pgbackrest info > /tmp/pgbackrest.stdout 2> /tmp/pgbackrest.stderr
+    /opt/cpm/bin/wrapper/pgbackrest info > /tmp/pgbackrest.stdout 2> /tmp/pgbackrest.stderr
     err=$?
     err_check ${err} "pgBackRest Configuration Check" \
         "Error with pgBackRest configuration: \n$(cat /tmp/pgbackrest.stderr)"
@@ -55,7 +55,7 @@ verify_pgbackrest_config() {
 # Creates the pgBackRest stanza
 create_stanza() {
     echo_info "pgBackRest: Executing 'stanza-create' to create stanza '${PGBACKREST_STANZA}'.."
-    pgbackrest stanza-create --no-online --log-level-console=info \
+    /opt/cpm/bin/wrapper/pgbackrest stanza-create --no-online --log-level-console=info \
         2> /tmp/pgbackrest.stderr
     err=$?
     err_check ${err} "pgBackRest Stanza Creation" \
@@ -65,16 +65,13 @@ create_stanza() {
 # Creates a full backup that will be the initial backup for the database
 create_initial_backup() {
     echo_info "pgBackRest: Executing initial pgBackRest backup"
-    pgbackrest backup --type=full --pg1-socket-path="/tmp" \
+    /opt/cpm/bin/wrapper/pgbackrest backup --type=full --pg1-socket-path="/crunchyadm" \
         2> /tmp/pgbackrest.stderr
     err=$?
     err_check ${err} "pgBackRest Initial Backup" \
         "Could not create initial pgBackRest backup: \n$(cat /tmp/pgbackrest.stderr)"
         echo_info "pgBackRest: Initial pgBackRest backup successfully created"
 }
-
-# First load pgBackRest env vars set during pre-bootstrap
-source /opt/cpm/bin/pgbackrest/pgbackrest-set-env.sh
 
 create_pgbackrest_dirs
 

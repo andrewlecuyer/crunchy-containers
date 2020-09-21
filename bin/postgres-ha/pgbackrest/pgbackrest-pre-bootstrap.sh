@@ -68,5 +68,5 @@ set_pgbackrest_env_vars
 
 env | grep "^PGBACKREST" | while read line ;
 do
-  echo "export ${line}" >> "/tmp/pgbackrest_env.sh"
+  echo "export ${line}" >> "/crunchyadm/pgbackrest_env.sh"
 done

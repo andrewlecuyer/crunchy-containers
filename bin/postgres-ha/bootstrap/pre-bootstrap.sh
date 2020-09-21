@@ -281,6 +281,12 @@ build_bootstrap_config_file() {
     then
         echo_info "Applying base postgres config to postgres-ha configuration"
         /opt/cpm/bin/yq m -i -x "${bootstrap_file}" "/opt/cpm/conf/postgres-ha-pgconf.yaml"
+
+        # set the proper PG bin directory in the sidecar
+        # PG_CONTAINER_PID=$(pgrep tail)
+        # chroot /proc/$PG_CONTAINER_PID/root
+        # export PATH=$PATH:/proc/$PG_CONTAINER_PID/root/usr/pgsql-12/bin
+        # sed -i "s/PG_CONTAINER_PID/$PG_CONTAINER_PID/g" "${bootstrap_file}"
     else
         echo_info "Base PG config for postgres-ha configuration disabled"
     fi
