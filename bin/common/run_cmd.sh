@@ -8,19 +8,20 @@ fi
 cmd_arr=("$@")
 cmd="${cmd_arr[0]}"
 
-printf "running command '%s' (pid=%s)\n" "${cmd}" "$$"
+# printf "running command '%s' (pid=%s)\n" "${cmd}" "$$"
 while read -r line
 do
     if [[ "${ASYNC}" != "true" && "${line:0:9}" == "EXIT_CODE" ]]
     then
         line_arr=(${line})
         exit_code=${line_arr[1]}
-        printf "EXIT_CODE %s (pid=%s)\n" "${exit_code}" "$$"
+        # printf "EXIT_CODE %s (pid=%s)\n" "${exit_code}" "$$"
+        break;
     fi
     printf "%s\n" "${line}"
 done < <(echo "$(printf "%q " "$@")" | socat ${socat_args[*]} "/crunchyadm/${SOCKET}.sock" "-,ignoreeof")
-printf "command '%s' complete (pid=%s)\n" "${cmd}" "$$"
-exit "${exit_code}"
+# printf "command '%s' complete (pid=%s)\n" "${cmd}" "$$"
+exit "${exit_code:0}"
 
 # run_cmd() {
 #     cmd_arr=("$@")

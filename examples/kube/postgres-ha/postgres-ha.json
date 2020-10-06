@@ -99,7 +99,7 @@
                 "serviceAccountName": "postgres-ha-sa",
                 "containers": [
                     {
-                        "name": "postgres",
+                        "name": "postgres-ha",
                         "image": "$CCP_IMAGE_PREFIX/crunchy-postgres-ha:$CCP_IMAGE_TAG",
                         "readinessProbe": {
                             "exec": {
@@ -263,7 +263,7 @@
                         "imagePullPolicy": "IfNotPresent"
                     },
                     {
-                        "name": "crunchy-postgres",
+                        "name": "postgres",
                         "image": "$CCP_IMAGE_PREFIX/crunchy-postgres:$CCP_IMAGE_TAG",
                         "securityContext": {
                             "runAsUser": 26
@@ -273,13 +273,9 @@
                         ],
                         "args": [
                             "-c",
-                            "socat UNIX-LISTEN://crunchyadm/crunchy-pg.sock,fork,reuseaddr EXEC:/opt/cpm/bin/exec-socket-cmd.sh,stderr"
+                            "PATH=$PATH:$(find /usr/ -type d -name 'pgsql-*')/bin socat UNIX-LISTEN://crunchyadm/crunchy-pg.sock,fork,reuseaddr EXEC:/opt/cpm/bin/exec-socket-cmd.sh,stderr"
                         ],
                         "env": [
-                            {
-                                "name": "PATH",
-                                "value": "/bin:/usr/pgsql-12/bin"
-                            },
                             {
                                 "name": "PGHOST",
                                 "value": "/crunchyadm"
@@ -289,6 +285,11 @@
                             {
                                 "mountPath": "/pgdata",
                                 "name": "pgdata",
+                                "readOnly": false
+                            },
+                            {
+                                "mountPath": "/backrestrepo",
+                                "name": "backrestrepo",
                                 "readOnly": false
                             },
                             {
@@ -316,6 +317,11 @@
                             {
                                 "mountPath": "/pgdata",
                                 "name": "pgdata",
+                                "readOnly": false
+                            },
+                            {
+                                "mountPath": "/backrestrepo",
+                                "name": "backrestrepo",
                                 "readOnly": false
                             },
                             {

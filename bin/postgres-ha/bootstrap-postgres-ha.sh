@@ -45,7 +45,7 @@ enable_debugging
 # are needed, and indicate cluster readiness
 initialization_monitor() {
     echo_info "Starting background process to monitor Patroni initization and restart the database if needed"
-    {
+    ({
         # Wait until the health endpoint for the local primary or replica to return 200 indicating it is running
         status_code=$(curl -o /dev/stderr -w "%{http_code}" "127.0.0.1:${PGHA_PATRONI_PORT}/health" 2> /dev/null)
         until [[ "${status_code}" == "200" ]]
@@ -80,7 +80,7 @@ initialization_monitor() {
         if [[ "${PGHA_INIT}" == "true" && "${PGHA_STANDBY}" != "true" ]]
         then
             # Ensure the cluster is no longer in recovery
-            until [[ $(psql -At -c "SELECT pg_catalog.pg_is_in_recovery()") == "f" ]]
+            until [[ $(/opt/cpm/bin/wrapper/psql -h /crunchyadm -At -c "SELECT pg_catalog.pg_is_in_recovery()") == "f" ]]
             do
                 echo_info "Detected recovery during cluster init, waiting one second..."
                 sleep 1
@@ -133,7 +133,7 @@ initialization_monitor() {
 
         touch "/crunchyadm/pgha_initialized"  # write file to indicate the cluster is fully initialized
         echo_info "Node ${PATRONI_NAME} fully initialized for cluster ${PATRONI_SCOPE} and is ready for use"
-    } &
+    } &) &
 }
 
 # Waits for the primary node specified to be initialized prior to initializing the replica in order to

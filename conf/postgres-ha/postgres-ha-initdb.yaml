@@ -10,6 +10,7 @@ bootstrap:
         temp_buffers: 8MB
         log_min_duration_statement: 60000
         log_statement: none
+        log_destination: stderr
         work_mem: 4MB
         max_wal_senders: 6
         shared_preload_libraries: pgaudit.so,pg_stat_statements.so,pgnodemx.so

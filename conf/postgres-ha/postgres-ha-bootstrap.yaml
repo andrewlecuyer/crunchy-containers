@@ -12,4 +12,4 @@ bootstrap:
       parameters:
         unix_socket_directories: /crunchyadm
         wal_level: logical
-  post_bootstrap: /opt/cpm/bin/bootstrap/post-bootstrap-sidecar.sh
+  post_bootstrap: /opt/cpm/bin/common/run-script-sidecar.sh "opt/cpm/bin/bootstrap/post-bootstrap.sh"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r cmd
-printf "starting command in sidecar: '%s'\n" "${cmd}"
+# printf "starting command in sidecar: '%s'\n" "${cmd}"
 cmd_arr=(${cmd})
 exe=${cmd_arr[0]}
 # eval "${cmd}"

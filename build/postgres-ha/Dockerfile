@@ -23,17 +23,9 @@ RUN if [ "$DFSET" = "centos" ] ; then \
         	--setopt=skip_missing_names_on_install=False \
         	openssh-clients \
         	openssh-server \
-        	pgaudit${PG_MAJOR//.} \
-        	crunchy-backrest-${BACKREST_VER} \
-        	postgresql${PG_MAJOR//.}-contrib \
-        	postgresql${PG_MAJOR//.}-server \
-        	postgresql${PG_MAJOR//.}-plpython* \
-        	pgnodemx${PG_MAJOR//.} \
-        	$( printf '11\n'${PG_MAJOR} | sort -VC && echo postgresql${PG_MAJOR}-llvmjit ) \
         	psmisc \
         	rsync \
         	less \
-        	wal2json${PG_MAJOR//.} \
         && ${PACKAGER} -y clean all ; \
 else \
        ${PACKAGER} -y install \

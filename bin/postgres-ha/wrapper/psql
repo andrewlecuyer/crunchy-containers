@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# SOCKET=crunchy-pg ASYNC=false /opt/cpm/bin/common/run_cmd.sh "echo ${input} | psql" "$@"
+
+SOCKET=crunchy-pg ASYNC=false /opt/cpm/bin/common/run_cmd.sh "psql" "$@"

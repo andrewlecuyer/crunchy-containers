@@ -24,7 +24,6 @@ RUN if [ "$DFSET" = "centos" ] ; then \
         	openssh-clients \
         	openssh-server \
         	pgaudit${PG_MAJOR//.} \
-        	crunchy-backrest-${BACKREST_VER} \
         	postgresql${PG_MAJOR//.}-contrib \
         	postgresql${PG_MAJOR//.}-server \
         	postgresql${PG_MAJOR//.}-plpython* \
